@@ -1,0 +1,4 @@
+root = true
+
+[*.{bat,md,conf,yml,properties,gradle,sh,java,graphqls,xml}]
+end_of_line = lf

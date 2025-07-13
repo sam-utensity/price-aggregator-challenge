@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: aggregator
+
+application:
+  pairs:
+    - base: BTC
+      quote: GBP
+    - base: ETH
+      quote: GBP
+
+exchange:
+  bitstamp:
+    name: Bitstamp
+    websocketUrl: wss://ws.bitstamp.net
