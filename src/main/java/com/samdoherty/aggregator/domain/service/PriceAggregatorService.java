@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,7 +18,7 @@ public class PriceAggregatorService {
     private final Map<Instrument, Price> prices = new ConcurrentHashMap<>();
 
     public void addPrice(@NotNull Instrument instrument, @NotNull BigDecimal price) {
-        prices.put(instrument, Price.builder().price(price).time(LocalDateTime.now()).build());
+        prices.put(instrument, Price.builder().price(price).time(ZonedDateTime.now()).build());
     }
 
     public @Nullable Price getPrice(@NotNull Instrument instrument) {

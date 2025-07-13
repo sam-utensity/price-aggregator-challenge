@@ -1,9 +1,9 @@
 package com.samdoherty.aggregator.api.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -23,9 +23,9 @@ public class GlobalExceptionAdvice {
                 .build());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiError> handleValidationException(
-            MethodArgumentNotValidException ex,
+            ConstraintViolationException ex,
             HttpServletRequest request) {
 
         return ResponseEntity.badRequest().body(ApiError.builder()

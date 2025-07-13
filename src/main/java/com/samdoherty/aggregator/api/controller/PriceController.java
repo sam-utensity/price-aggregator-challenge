@@ -28,14 +28,14 @@ public class PriceController {
     public ResponseEntity<Price> getPrices(
             @Valid
             @NotBlank(message = "Path variable 'symbol' cannot be blank")
-            @Pattern(regexp = "^[A-Z]{3}-[A-Z]{3}$", message = "Path variable 'symbol' must be in the format 'AAA-BBB' using uppercase letters only.")
+            @Pattern(regexp = "^[A-Za-z]{3}-[A-Za-z]{3}$", message = "Path variable 'symbol' must be in the format 'AAA-BBB' using uppercase or lowercase letters.")
             @PathVariable
             String symbol) {
 
         Price price = priceAggregatorService.getPrice(Instrument.builder()
                 .exchange(DEFAULT_EXCHANGE)
-                .base(StringUtils.left(symbol, 3))
-                .quote(StringUtils.right(symbol, 3))
+                .base(StringUtils.left(symbol, 3).toUpperCase())
+                .quote(StringUtils.right(symbol, 3).toUpperCase())
                 .build());
 
         if (price == null) {

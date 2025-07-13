@@ -33,16 +33,18 @@ public abstract class AbstractExchangeWebsocket {
 
     private final String websocketUri;
 
-    /**
-     * Sneaky throws as we want the application to shut down if cannot initially start.
-     * We don't want the upstream orchestration to worry about this
-     */
-    @SneakyThrows
     public AbstractExchangeWebsocket(@NotNull String websocketUri) {
         this.websocketUri = websocketUri;
         // Preempt time serialisation issues
         objectMapper.registerModule(new JavaTimeModule());
+    }
 
+    /**
+     * Sneaky throws as we want the application to shut down if cannot initially start.
+     * We don't want the upstream orchestration to worry about this
+     */
+    @SneakyThrows({URISyntaxException.class, DeploymentException.class, IOException.class})
+    protected void connect() {
         connectToServer();
     }
 
@@ -51,6 +53,8 @@ public abstract class AbstractExchangeWebsocket {
 
         //TODO retry logic for ONLY server connection issues e.g. wifi down
         session = container.connectToServer(this, new URI(websocketUri));
+
+        subscribe();
     }
 
     private void reconnectToServer() {
@@ -93,6 +97,14 @@ public abstract class AbstractExchangeWebsocket {
         log.error("{} websocket error: {}", getName(), error.getMessage(), error);
         ensureClosed();
         reconnectToServer();
+    }
+
+    protected void close() {
+        try {
+            session.close();
+        } catch (IOException e) {
+            log.error("Failed to manually close", e);
+        }
     }
 
     private void ensureClosed() {

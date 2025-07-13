@@ -3,11 +3,14 @@ package com.samdoherty.aggregator.domain.model;
 import lombok.Builder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Builder
 public record Price(
         BigDecimal price,
-        LocalDateTime time
+        /*
+         * Much easier to ensure ISO 8601 using ZonedDateTime
+         */
+        ZonedDateTime time
 ) {
 }
