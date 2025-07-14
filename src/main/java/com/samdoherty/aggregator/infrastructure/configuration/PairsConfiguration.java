@@ -7,6 +7,9 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
+/**
+ * Application properties are mapped to these objects representing the currency pair we wish exchanges to monitor
+ */
 @Validated
 @ConfigurationProperties(prefix = "application")
 public record PairsConfiguration(

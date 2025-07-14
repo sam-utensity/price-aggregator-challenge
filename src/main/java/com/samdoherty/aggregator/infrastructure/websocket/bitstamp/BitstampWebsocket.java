@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Core websocket logic for consuming market data from bitstamp
+ */
 @Slf4j
 @Service
 @ClientEndpoint
@@ -42,6 +45,11 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
     @Getter
     private final List<Pair> pairs;
 
+    /**
+     * Bitstamp channel to normalized Instrument object mappings
+     * <p>
+     * Used as a lightweight adapter
+     */
     private final Map<String, Instrument> channelToInstrumentMap = new HashMap<>();
 
     private final PriceAggregatorService aggregatorService;
@@ -71,10 +79,19 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
 
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+        // Added these here as an easy way to ensure the application fails to start upon error
+        // As opposed to a zombie service
         mapSymbolsToInstruments();
         connect();
     }
 
+    /**
+     * Inplace of an adaptor layer, we simply generate mappings for currency pairs
+     * <p>
+     * This method compares configured currency pairs with Bitstamp markets
+     * <p>
+     * This allows us to map websocket channels to normalized Instrument objects by which we store and retrieve pricing
+     */
     private void mapSymbolsToInstruments() {
         List<Market> allMarkets = apiClient.getMarkets();
 
@@ -94,6 +111,12 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
         }
     }
 
+    /**
+     * Map a configured currency pair to a Bitstamp compatible market symbol
+     *
+     * @param pair configured for monitoring
+     * @return string symbol
+     */
     private String pairToSymbol(Pair pair) {
         return "%s%s".formatted(pair.base(), pair.quote()).toLowerCase();
     }
@@ -107,7 +130,7 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
                         .data(SubscribeMessage.builder()
                                 .channel(channel).build()).build());
 
-                prePopulate(channel);
+                prePopulatePrices(channel);
             } catch (IOException e) {
                 throw new RuntimeException("Unable to subscribe to bitstamp channel %s".formatted(channel), e);
             }
@@ -124,9 +147,12 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
     }
 
     /**
-     * To avoid race conditions, we would ideally hold websocket messages until this has completed
+     * A little sugar beyond the spec. Rather than wait for a first trade via the websocket,
+     * we proactively retrieve the latest price and apply to the aggregator service (write if not null)
+     * <p>
+     * To guarantee the avoidance of race conditions, we would ideally hold websocket messages until this has completed
      */
-    private void prePopulate(String channel) {
+    private void prePopulatePrices(String channel) {
         Instrument instrument = channelToInstrumentMap.get(channel);
 
         Ticker ticker = apiClient.getLatestPrice(channel.replace(CHANNEL_PREFIX, ""));
@@ -142,6 +168,10 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
             return;
         }
 
+        if (message.contains(Event.SUBSCRIBE_SUCCESS.toString())) {
+            return;
+        }
+
         if (message.contains(Event.RECONNECT_REQUEST.toString())) {
             close(); // Close and allow the restart mechanism to take over
             return;
@@ -151,7 +181,7 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
             return;
         }
 
-        log.info("Received message: {}", message);
+        log.info("Received additional message: {}", message);
     }
 
     private void processTradeMessage(@NotNull String message) {

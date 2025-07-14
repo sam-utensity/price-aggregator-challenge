@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+/**
+ * Ensure errors conform to spec
+ */
 @ControllerAdvice
 public class GlobalExceptionAdvice {
 
@@ -31,7 +34,7 @@ public class GlobalExceptionAdvice {
         return ResponseEntity.badRequest().body(ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Validation Failed")
-                .message(ex.getMessage())
+                .message(ex.getConstraintViolations().iterator().next().getMessage())
                 .path(request.getRequestURI())
                 .build());
     }

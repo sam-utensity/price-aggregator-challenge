@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Core external route into application
+ */
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +27,12 @@ public class PriceController {
 
     private final PriceAggregatorService priceAggregatorService;
 
+    /**
+     * Get the latest price of an instrument
+     *
+     * @param symbol format 'AAA-BBB' using uppercase or lowercase letters
+     * @return Price object
+     */
     @GetMapping("/prices/{symbol}")
     public ResponseEntity<Price> getPrices(
             @Valid

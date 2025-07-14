@@ -5,6 +5,11 @@ import lombok.Builder;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
+/**
+ * Simple price response object for API
+ * @param price
+ * @param time
+ */
 @Builder
 public record Price(
         BigDecimal price,

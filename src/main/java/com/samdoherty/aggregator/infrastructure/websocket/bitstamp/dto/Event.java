@@ -2,6 +2,9 @@ package com.samdoherty.aggregator.infrastructure.websocket.bitstamp.dto;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Bitstamp websocket event types we support and use
+ */
 public enum Event {
     SUBSCRIBE("bts:subscribe"),
     SUBSCRIBE_SUCCESS("bts:subscription_succeeded"),

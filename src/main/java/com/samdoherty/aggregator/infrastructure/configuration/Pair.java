@@ -3,6 +3,9 @@ package com.samdoherty.aggregator.infrastructure.configuration;
 import jakarta.validation.constraints.Pattern;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Application properties are mapped to these objects representing the currency pair we wish exchanges to monitor
+ */
 public record Pair(
         /*
          * Enforced uppercase is a little strict, but it enforces consistence and removes human error when implementing exchanges

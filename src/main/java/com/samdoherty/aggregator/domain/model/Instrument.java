@@ -4,10 +4,16 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+/**
+ * Standardised
+ */
 @Getter
 @Builder
 @EqualsAndHashCode
 public class Instrument {
+    /**
+     * Strictly speaking, this is not yet needed. Is here, for example, purposes of extendability
+     */
     private String exchange;
     private String base;
     private String quote;

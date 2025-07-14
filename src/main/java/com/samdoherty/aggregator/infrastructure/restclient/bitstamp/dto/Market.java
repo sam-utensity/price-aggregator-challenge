@@ -2,6 +2,9 @@ package com.samdoherty.aggregator.infrastructure.restclient.bitstamp.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Bitstamp market data for a particular instrument
+ */
 public record Market(
         @JsonProperty("market_symbol")
         String symbol,

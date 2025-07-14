@@ -10,6 +10,9 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+/**
+ * Simple API connection to Bitstamp
+ */
 @Service
 public class BitstampApiClient {
 
@@ -19,6 +22,11 @@ public class BitstampApiClient {
         restClient = RestClient.create(url);
     }
 
+    /**
+     * Get all available markets Bitstamp supports
+     *
+     * @return list of markets
+     */
     public List<Market> getMarkets() {
         return restClient.get()
                 .uri("/api/v2/markets/")
@@ -27,6 +35,12 @@ public class BitstampApiClient {
                 });
     }
 
+    /**
+     * Get the latest ticket containing the latest price
+     *
+     * @param symbol to get the latest tick data for
+     * @return the latest tick data
+     */
     public Ticker getLatestPrice(@NotNull String symbol) {
         return restClient.get()
                 .uri("/api/v2/ticker/" + symbol)

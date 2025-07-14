@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.concurrent.*;
 
 
+/**
+ * Extendable websocket implementation to generalize re-connect and websocket domain logic
+ */
 @Slf4j
 public abstract class AbstractExchangeWebsocket {
 
@@ -37,6 +40,10 @@ public abstract class AbstractExchangeWebsocket {
     public abstract void healthCheck();
 
     private Session session;
+
+    /**
+     * Async rather than basic to allow for timeouts
+     */
     private RemoteEndpoint.Async asyncWebsocketRemote;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -93,6 +100,12 @@ public abstract class AbstractExchangeWebsocket {
         }
     }
 
+    /**
+     * Minor backoff implementation to a max of 5 seconds
+     *
+     * @param attempt number. Sleeps between retries scales by attempt
+     * @return sleep time in ms
+     */
     private int getSleepTimer(int attempt) {
         return Math.min(attempt * 500, 5000);
     }
