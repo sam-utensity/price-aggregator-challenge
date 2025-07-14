@@ -8,7 +8,7 @@ If you wish to keep your local machine clean and you have docker installed:
 
 - Spin up a docker container we can build and run in:
 
-`docker run -p 8080:8080 --detach eclipse-temurin:21.0.7_6-jdk sh -c "tail -f /dev/null" --name pricing-aggregator-build-run`
+`docker run -p 8080:8080 --detach --name pricing-aggregator-build-run eclipse-temurin:21.0.7_6-jdk sh -c "tail -f /dev/null"`
 
 - Access the running container:
 
@@ -29,8 +29,8 @@ If you wish to keep your local machine clean and you have docker installed:
 - Java 21 installed on path
 - If running local gradle then version required is 8.14.3
 - This project cloned onto machine: `git clone https://github.com/sam-utensity/price-aggregator-challenge.git`
-- gradlew has executable permissions (is already tracked as such, if something has gone wrong then `chmod +x gradlew` )
-  or gradle installed as a path command
+- gradlew has executable permissions (is already tracked as such, if something has gone wrong then use `chmod +x gradlew` )
+- OPTIONAL: gradle installed as a path command
 
 #### Instruction
 
