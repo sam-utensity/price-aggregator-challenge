@@ -43,6 +43,5 @@ public class PriceController {
         }
 
         return ResponseEntity.ok(price);
-
     }
 }

@@ -17,6 +17,10 @@ public class PriceAggregatorService {
 
     private final Map<Instrument, Price> prices = new ConcurrentHashMap<>();
 
+    public void addInitialPrice(@NotNull Instrument instrument, @NotNull BigDecimal price) {
+        prices.computeIfAbsent(instrument, i -> Price.builder().price(price).time(ZonedDateTime.now()).build());
+    }
+
     public void addPrice(@NotNull Instrument instrument, @NotNull BigDecimal price) {
         prices.put(instrument, Price.builder().price(price).time(ZonedDateTime.now()).build());
     }

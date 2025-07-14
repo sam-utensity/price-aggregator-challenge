@@ -9,6 +9,7 @@ import com.samdoherty.aggregator.infrastructure.configuration.Pair;
 import com.samdoherty.aggregator.infrastructure.configuration.PairsConfiguration;
 import com.samdoherty.aggregator.infrastructure.restclient.bitstamp.client.BitstampApiClient;
 import com.samdoherty.aggregator.infrastructure.restclient.bitstamp.dto.Market;
+import com.samdoherty.aggregator.infrastructure.restclient.bitstamp.dto.Ticker;
 import com.samdoherty.aggregator.infrastructure.websocket.AbstractExchangeWebsocket;
 import com.samdoherty.aggregator.infrastructure.websocket.bitstamp.dto.Event;
 import com.samdoherty.aggregator.infrastructure.websocket.bitstamp.dto.SubscribeMessage;
@@ -105,10 +106,23 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
                         .event(Event.SUBSCRIBE)
                         .data(SubscribeMessage.builder()
                                 .channel(channel).build()).build());
+
+                prePopulate(channel);
             } catch (IOException e) {
                 throw new RuntimeException("Unable to subscribe to bitstamp channel %s".formatted(channel), e);
             }
         }
+    }
+
+    /**
+     * To avoid race conditions, we would ideally hold websocket messages until this has completed
+     */
+    private void prePopulate(String channel) {
+        Instrument instrument = channelToInstrumentMap.get(channel);
+
+        Ticker ticker = apiClient.getLatestPrice(channel.replace(CHANNEL_PREFIX, ""));
+
+        aggregatorService.addInitialPrice(instrument, ticker.last().setScale(instrument.getScale(), RoundingMode.HALF_EVEN));
     }
 
     @Override

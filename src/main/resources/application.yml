@@ -5,13 +5,13 @@ spring:
 application:
   pairs:
     - base: BTC
-      quote: GBP
-
-    - base: BTC
       quote: USD
 
     - base: ETH
-      quote: GBP
+      quote: USD
+
+    - base: ETH
+      quote: BTC
 
 exchange:
   bitstamp:
