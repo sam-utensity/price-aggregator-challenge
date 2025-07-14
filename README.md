@@ -18,7 +18,9 @@ If you wish to keep your local machine clean and you have docker installed:
 
 `apt-get -y update && apt-get -y install git`
 
-`git clone https://github.com/sam-utensity/price-aggregator-challenge.git && cd price-aggregator-challenge && ./gradlew bootJar`
+`git clone https://github.com/sam-utensity/price-aggregator-challenge.git`
+
+`cd price-aggregator-challenge && ./gradlew bootJar`
 
 `java -jar ./build/libs/aggregator.jar`
 
