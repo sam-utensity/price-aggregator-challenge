@@ -3,8 +3,11 @@
 
 
 
-
 # Considerations
+
+## Improvements
+
+Integration tests for thorough test coverage
 
 ## Websocket
 
@@ -19,9 +22,6 @@ Instead, going with a business driven/ domain structure
 
 TODO:
 
-1) Pre-populate existing price to avoid waiting for first price from websocket
-2) Self heal logic
-3) Unit testing
 4) Build scripts and instructions
 5) Code clean up and prettying
 6) Finish any additional instructions and README

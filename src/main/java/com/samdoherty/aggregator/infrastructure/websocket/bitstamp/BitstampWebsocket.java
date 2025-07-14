@@ -114,6 +114,15 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
         }
     }
 
+    @Override
+    public void healthCheck() {
+        try {
+            sendMessage(WebsocketMessage.builder().event(Event.HEARTBEAT).build());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * To avoid race conditions, we would ideally hold websocket messages until this has completed
      */
@@ -138,12 +147,16 @@ public class BitstampWebsocket extends AbstractExchangeWebsocket {
             return;
         }
 
+        if (message.contains(Event.HEARTBEAT.toString())) {
+            return;
+        }
+
         log.info("Received message: {}", message);
     }
 
     private void processTradeMessage(@NotNull String message) {
         try {
-            WebsocketMessage<TradeData> trade = objectMapper.readValue(message, new TypeReference<WebsocketMessage<TradeData>>() {
+            WebsocketMessage<TradeData> trade = objectMapper.readValue(message, new TypeReference<>() {
             });
             Instrument instrument = channelToInstrumentMap.get(trade.channel());
             aggregatorService.addPrice(instrument, trade.data().price().setScale(instrument.getScale(), RoundingMode.HALF_EVEN));

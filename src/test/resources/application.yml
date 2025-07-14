@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: aggregator
+
+exchange:
+  bitstamp:
+    name: Bitstamp
+    apiUrl: https://INVALID
+    websocketUrl: wss://INVALID
+
+application:
+  pairs:
+    - base: AAA
+      quote: BBB

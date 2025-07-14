@@ -15,12 +15,12 @@ public class GlobalExceptionAdvice {
             SymbolNotFoundException ex,
             HttpServletRequest request) {
 
-        return ResponseEntity.badRequest().body(ApiError.builder()
+        return new ResponseEntity<>(ApiError.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Missing")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
-                .build());
+                .build(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

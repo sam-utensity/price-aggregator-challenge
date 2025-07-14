@@ -6,7 +6,8 @@ public enum Event {
     SUBSCRIBE("bts:subscribe"),
     SUBSCRIBE_SUCCESS("bts:subscription_succeeded"),
     TRADE("trade"),
-    RECONNECT_REQUEST("bts:request_reconnect");
+    RECONNECT_REQUEST("bts:request_reconnect"),
+    HEARTBEAT("bts:heartbeat");
 
     @JsonValue
     private final String value;

@@ -8,11 +8,14 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.List;
+import java.util.concurrent.*;
 
 
 @Slf4j
@@ -26,8 +29,15 @@ public abstract class AbstractExchangeWebsocket {
 
     public abstract @NotNull List<Pair> getPairs();
 
+    /**
+     * Ensure connection is still active and not stale
+     * <p>
+     * Call close() if not to initiate reconnection logic
+     */
+    public abstract void healthCheck();
+
     private Session session;
-    private RemoteEndpoint.Basic basicRemote;
+    private RemoteEndpoint.Async asyncWebsocketRemote;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -49,35 +59,62 @@ public abstract class AbstractExchangeWebsocket {
     }
 
     private void connectToServer() throws URISyntaxException, DeploymentException, IOException {
+
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
-        //TODO retry logic for ONLY server connection issues e.g. wifi down
-        session = container.connectToServer(this, new URI(websocketUri));
+        container.setAsyncSendTimeout(3000);
 
-        subscribe();
-    }
+        Future<Session> future = null;
 
-    private void reconnectToServer() {
-        try {
-            log.info("Reconnecting to {} server", getName());
-            connectToServer();
-        } catch (URISyntaxException | DeploymentException | IOException e) {
-            // TODO figure out which of these are reconnect worthy
-            // TODO backoff logic?
-            log.error(e.getMessage(), e);
-        } catch (Exception e) {
-            throw e;
+        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+            future = executor.submit(() -> container.connectToServer(this, new URI(websocketUri)));
+            session = future.get(2, TimeUnit.SECONDS); // 2s timeout
+            subscribe();
+        } catch (TimeoutException | InterruptedException | ExecutionException e) {
+            future.cancel(true); // Cancel the hanging connection attempt
+            throw new DeploymentException("Connection attempt timed out", e);
         }
     }
 
+    protected void reconnectToServer(int attempt) {
+        try {
+            log.info("Reconnecting to {} server", getName());
+            connectToServer();
+            // Indicative of network issues
+        } catch (UnresolvedAddressException | DeploymentException e) {
+            try {
+                Thread.sleep(getSleepTimer(attempt));
+            } catch (InterruptedException ignored) {
+                return;
+            }
+            reconnectToServer(attempt + 1);
+        } catch (URISyntaxException | IOException e) {
+            log.error("Reconnection failed: {}", e.getMessage(), e);
+        }
+    }
+
+    private int getSleepTimer(int attempt) {
+        return Math.min(attempt * 500, 5000);
+    }
+
     public <M> void sendMessage(@NotNull M message) throws IOException {
-        basicRemote.sendText(objectMapper.writeValueAsString(message));
+        if (asyncWebsocketRemote == null) {
+            return;
+        }
+
+        asyncWebsocketRemote.sendText(objectMapper.writeValueAsString(message), result -> {
+            if (!result.isOK()) {
+                log.error("Failed to send message to {}: {}. Resetting connection.", getName(), result);
+                close();
+            }
+        });
     }
 
     @OnOpen
     public void onOpen(Session userSession) {
         log.info("Listening to {} currency pairs {}", getName(), StringUtils.join(getPairs(), ", "));
-        basicRemote = userSession.getBasicRemote();
+        asyncWebsocketRemote = userSession.getAsyncRemote();
+        asyncWebsocketRemote.setSendTimeout(2000);
     }
 
     @OnMessage
@@ -86,22 +123,24 @@ public abstract class AbstractExchangeWebsocket {
     }
 
     @OnClose
-    public void onClose(Session userSession, CloseReason reason) {
+    public void onClose(Session ignored, CloseReason reason) {
         log.error("{} websocket close: {}", getName(), reason.getReasonPhrase());
         ensureClosed();
-        reconnectToServer();
+        reconnectToServer(1);
     }
 
     @OnError
-    public void onError(Session userSession, Throwable error) {
+    public void onError(Session ignored, Throwable error) {
         log.error("{} websocket error: {}", getName(), error.getMessage(), error);
         ensureClosed();
-        reconnectToServer();
+        reconnectToServer(1);
     }
 
-    protected void close() {
+    public void close() {
         try {
-            session.close();
+            if (session != null) {
+                session.close();
+            }
         } catch (IOException e) {
             log.error("Failed to manually close", e);
         }
@@ -116,8 +155,13 @@ public abstract class AbstractExchangeWebsocket {
             }
         }
 
-        if (basicRemote != null) {
-            basicRemote = null;
+        if (asyncWebsocketRemote != null) {
+            asyncWebsocketRemote = null;
         }
+    }
+
+    @Scheduled(initialDelay = 2000, fixedRate = 3000)
+    public void scheduledHealthCheck() {
+        healthCheck();
     }
 }
